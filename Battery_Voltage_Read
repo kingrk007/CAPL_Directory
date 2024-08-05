@@ -1,0 +1,22 @@
+includes
+{
+}
+
+Variables
+{
+msTimer timer1;
+diagRequest ECU Qualifier.Battery_Voltage_Read req;
+}
+
+on timer timer1
+{
+diagSetTarget ("ECU Qualifier");
+diagSendRequest (req);
+req.SendRequest();
+}
+
+on start
+{
+diagSendRequest(req);
+setTimerCyclic(timer1,500);
+}
