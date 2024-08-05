@@ -1,0 +1,139 @@
+includes
+{
+  
+}
+
+variables
+{
+  diagResponse ECU_Qualifier_Name.ExtendedDiagnosticSession_Start Ext_Session_Resp;
+  diagRequest ECU_Qualifier_Name.ExtendedDiagnosticSession_Start Extended_session_Request;
+  diagRequest ECU_Qualifier_Name.RequestSeed1_Request gSeedReq;
+  diagResponse ECU_Qualifier_Name.RequestSeed1_Request gSeedResp;
+  diagRequest ECU_Qualifier_Name.SendKey1_Send gKeyReq;
+  diagRequest RequestSeedL3_Key_Send gKeyReq2;
+  diagRequest ECU_Qualifier_Name.DefaultSession_Start default_session_req;
+  diagResponse ECU_Qualifier_Name.DefaultSession_Start default_session_resp;
+  diagRequest ECU_Qualifier_Name.VIN_Vehicle_Identification_number_Write VIN_Data_Write;
+
+  char gOption[10] = "option";
+  int gMaxKeyArraySize = 255;
+  byte gKeyArray[255];
+  int gSeedArray2Size = 8;
+  byte gSeedArray2[8];
+  int gSecurity2Level = 0x05;
+  dword gActualSize = 0;
+  char gVariant[10] = "Base";
+  int i = 0;
+  int security_access_flag = 0;
+  byte VIN[17];
+  byte wrong_key_arr[2] = {0x00, 0x01};
+  long size;
+}
+
+
+testcase VIN_Data_Write()
+{
+  Check_Default_session_Response();
+  testWaitForTimeout(100);
+  Check_Extended_session_Response();
+  testWaitForTimeout(100);
+  check_security_access_level();
+  testWaitForTimeout(500);
+  VIN[1]= 0x01;
+  VIN[2]= 0x01;
+  VIN[3]= 0x01;
+  VIN[4]= 0x01;
+  VIN[5]= 0x01;
+  VIN[6]= 0x01;
+  VIN[7]= 0x01;
+  VIN[8]= 0x01;
+  VIN[9]= 0x01;
+  VIN[10]= 0x01;
+  VIN[11]= 0x01;
+  VIN[12]= 0x01;
+  VIN[13]= 0x01;
+  VIN[14]= 0x01;
+  VIN[15]= 0x01;
+  VIN[16]= 0x01;
+  VIN[16]= 0x17;
+  diagSetParameterRaw(VIN_Data_Write,"VIN_Write",VIN,elCount(VIN));
+  diagSendRequest(VIN_Data_Write); 
+}
+
+void Check_Extended_session_Response()
+{
+ diagSetTarget("ECU_Qualifier_Name");
+ diagSendRequest(Extended_session_Request);           
+ testWaitForDiagResponse(100);                           //Wait
+ diagGetLastResponse(Ext_Session_Resp);  
+ testWaitForTimeout(100);
+}
+
+void Check_Default_session_Response()
+{
+ diagSetTarget("ECU_Qualifier_Name");
+ diagSendRequest(default_session_req);        
+ testWaitForDiagResponse(100);                           //Wait
+ diagGetLastResponse(default_session_resp);  
+ testWaitForTimeout(100);
+}
+
+
+
+
+void check_security_access_level(void)
+{
+ TestCaseComment("Check Security access level 3 or level 1 Response.");
+ diagSendRequest(gSeedReq);
+ TestCaseComment("Send Request for Seed");
+ testReportWriteDiagObject(gSeedReq);
+ TestWaitForDiagRequestSent(gSeedReq, 1000);
+ diagGetLastResponse(gSeedResp);
+ testReportWriteDiagObject(gSeedResp);
+}
+
+
+on diagResponse ECU_Qualifier_Name.RequestSeed1_Request
+{
+ int i;
+ long ret;
+ // Extract seed from response
+ ret=DiagGetParameterRaw (this, "SecuritySeed", gSeedArray2, elcount(gSeedArray2));
+ if (ret)
+ {
+	write("DiagGetParameterRaw: Errorcode %d", ret);
+ }
+ else
+ {
+	write("key got sucessfully");
+	for(i=0;i<8;i++){write("%d",gSeedArray2.byte(i));}
+	write("%d",elcount(gSeedArray2));  
+ }
+ gSeedArray2Size = 8;
+ gSecurity2Level = 0x05;
+ // Calculate key using the seed
+ ret=DiagGenerateKeyFromSeed (gSeedArray2, gSeedArray2Size, gSecurity2Level, gVariant, gOption, gKeyArray, gMaxKeyArraySize, gActualSize);
+ if (ret)
+ {
+	write("DiagGenerateKeyFromSeed: Errorcode %d", ret);
+ }
+ else
+ {
+	write("Key successfully Generated! Key length: %d", gActualSize);
+ }
+ // Write key into diagnostic request
+ DiagSetParameterRaw(gKeyReq, "SecurityKey", gKeyArray, gActualSize);
+ // Send diagnostic request with key to unlock ECU
+ if(security_access_flag == 1)
+ {
+  DiagSetParameterRaw(gKeyReq2, "SecurityKey_3", wrong_key_arr, 2);
+  diagSendRequest(gKeyReq2);
+ }
+ else
+	diagSendRequest(gKeyReq);
+}
+
+MainTest()
+{
+ VIN_Data_Write();
+}
