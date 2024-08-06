@@ -1,0 +1,345 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+/* Global Variable for CAPL*/
+variables
+{  
+  message IEB1_FD_10 ieb1fd10;                                              //IEB1_FD_10;
+  message HPCC_4_10 hpcc410;                                                //HPCC_4_10;
+  message HPCC_1_100 hpcc1100;                                              //HPCC_1_100;
+  message HPCC_3_100 hpcc3100;                                              //HPCC_3_100;
+  message HPCAd_3_50 hpcad350;                                              //HPCAd_3_50;
+  message VCU2_FD_100 vcu2fd100;                                            //VCU2_FD_100;
+  message VCU1_FD_20 vcu1fd20;                                              //VCU1_FD_20
+  message HPCC_CANNM hpccnm;
+  message MIDDLE_ZONE_CANNM MZ_NM;
+  message NAM_CANNM nam_nm;
+  message MID_ZONE1_100 midZone1100; 
+  message VCU11_FD_10 vcu11fd10;
+  
+  /*----------------------Timers---------------------------*/
+  msTimer t10;
+  msTimer t50;
+  msTimer t100;
+  diagResponse Front_Zonal.RW_176_Feature_Coding_Read FeatureRRes;
+  int i;
+  byte FeatureByte[40];
+}
+
+/* Extract the value of each feature. */
+int getvar(int var, int mask, int pos)
+{
+  int temp;
+  temp = var & mask;
+  temp = temp >> pos;
+  return temp;  
+}
+
+/* Run this function to update on 10ms timer */
+void exec()
+{
+  /*----------------------IEB1_FD_10----------------------*/
+  ieb1fd10.VEHICLE_SPEED.phys = @Vehicle_Var::VehicleSpeed;
+  
+  /*----------------------HPCC_1_10----------------------*/
+  hpcc1100.HEADLAMP_CONTROL_IS.phys = @HeadLamp::HeadLamp_IS;
+  hpcc1100.TPMS.phys = @TPMS_CMD::tpms_Enable_Disable;
+  hpcc1100.TPMS_AUTO_LEARN.phys = @TPMS_CMD::tpms_Auto_Learn_;
+  hpcc1100.TPMS_ENTER_PR.phys = @TPMS_CMD::_tpms_Enter_PR_;
+  hpcc1100.CARPET_LAMP_PATTERN_IS.phys = @Carpet::carpetLamp_Pattern_IS;
+  hpcc1100.CARPET_LAMP_IS.phys = @Carpet::carpetLampIS;
+  
+   /*----------------------HPCC_3_10----------------------*/
+  hpcc3100.REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM.phys = @Tellematic::REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM;     //REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM
+  hpcc3100.REQ_REAR_DEFOG_MCM.phys = @Tellematic::REQ_REAR_DEFOG_MCM;                                 //REQ_REAR_DEFOG_MCM
+  hpcc3100.SEARCH_CAR_WO_HORN_MCM.phys = @Tellematic::SEARCH_CAR_WO_HORN_MCM;                         //SEARCH_CAR_WO_HORN_MCM
+  hpcc3100.REQ_DOOR_LOCK_MCM.phys = @Tellematic::REQ_DOOR_LOCK_MCM;                                   //REQ_DOOR_LOCK_MCM
+  hpcc3100.REQ_HAZARD_MCM.phys = @Tellematic::REQ_HAZARD_MCM;                                         //REQ_HAZARD_MCM
+  hpcc3100.REQ_LOWBEAM_MCM.phys = @Tellematic::REQ_LOWBEAM_MCM;                                       //REQ_LOWBEAM_MCM
+  hpcc3100.TURN_ON_OFF_PARK_LAMP_MCM.phys = @Tellematic::TURN_ON_OFF_PARK_LAMP_MCM;                   //TURN_ON_OFF_PARK_LAMP_MCM
+  hpcc3100.SEARCH_CAR_WO_HAZARD_MCM.phys = @Tellematic::SEARCH_CAR_WO_HAZARD_MCM;                     //SEARCH_CAR_WO_HAZARD_MCM
+  hpcc3100.SEARCH_CAR_WITH_HORN_MCM.phys = @Tellematic::SEARCH_CAR_WITH_HORN_MCM;                     //SEARCH_CAR_WITH_HORN_MCM
+  hpcc3100.REQ_POWER_WIND_UP_DOWN_MCM.phys = @Tellematic::REQ_POWER_WIND_UP_DOWN_MCM;                 //REQ_POWER_WIND_UP_DOWN_MCM
+  hpcc3100.REQ_SUNROOF_UP_DOWN_MCM.phys = @Tellematic::REQ_SUNROOF_UP_DOWN_MCM;                       //REQ_SUNROOF_UP_DOWN_MCM
+  hpcc3100.REMOTE_POT_TAILGATE_MCM.phys = @Tellematic::REMOTE_POT_TAILGATE_MCM;                       //REMOTE_POT_TAILGATE_MCM
+  hpcc3100.REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM.phys = @Tellematic::REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM;     //REMOTE_CHRGEFLAP_LOCK_UNLOCK_MCM
+  hpcc3100.REQ_TAILGATE_UNLOCK_MCM.phys = @Tellematic::REQ_TAILGATE_UNLOCK_MCM;                       //REQ_TAILGATE_UNLOCK_MCM
+  
+  
+    //hpcc3100.SEARCH_CAR_WITH_HORN_MCM
+  /*----------------------HPCC_4_10----------------------*/
+  hpcc410.CNTRL_REAR_PARK_LAMP.phys = @HeadLamp::cntrl_RearParkLamp;
+  hpcc410.CNTRL_LOW_BEAM_LH_RH.phys = @HeadLamp::cntrl_LowBeam;
+  hpcc410.CNTRL_HIGH_BEAM_LH_RH.phys = @HeadLamp::cntrl_HighBeam;   
+  hpcc410.CNTRL_HIGH_BEAM_BOOSTER_LH_RH.phys = @HeadLamp::cntrl_HHB;
+  hpcad350.HBA_LAMP_STS.phys = @HeadLamp::HBALamp_sts;
+  hpcc410.CNTRL_FRONT_FOG_LAMP.phys = @HeadLamp::hpcc_foglamp;
+  hpcc410.CNTRL_DRL_LH_RH.phys = @HeadLamp::hpcc_drl;
+  hpcc410.CNTRL_DRL_FR_PARK_ORVM_RH.phys = @HeadLamp::hpcc_drl_FR;
+  hpcc410.CNTRL_DRL_FL_PARK_ORVM_LH.phys = @HeadLamp::hpcc_drl_FL;
+  
+  /*----------------------VCU1_FD_20----------------------*/
+  vcu1fd20.DRIVE_ENABLE_STATUS.phys = @Vehicle_Var::DriveEnable;
+
+  /*----------------------VCU2_FD_100----------------------*/
+  vcu2fd100.GEAR_ACTUAL.phys = @Vehicle_Var::VehicleGear;
+  vcu2fd100.SOC_VCU.phys =  @Vehicle_Var::SOC;
+  
+  /*----------------------MID- Zonal 1 100----------------------*/
+  midZone1100.STS_HANDLE.phys = (@FDHM_::RR_sts*8) + (@FDHM_::RL_sts*4) +(@FDHM_::FR_sts*2) +(@FDHM_::FL_sts*1);
+  
+  /*----------------------MID- Zonal 1 100----------------------*/
+  vcu11fd10.BRK_SWITCH.phys = @Vehicle_Var::_brake_padel;
+}
+
+/*Timer : for 100ms CAN frame */
+on timer t100
+{
+  output(hpcc1100);
+  output(hpcc3100);
+  //output(midZone1100);
+  if(@sysvar::NM_bit::nm_hpcc  == 1)
+  {
+    output(hpccnm);
+  }
+  if(@sysvar::NM_bit::nm_mdZonal  == 1)
+  {
+    output(MZ_NM);
+  }
+  if(@sysvar::NM_bit::nm_nam == 1)
+  {
+    output(nam_nm);
+  }
+  
+}
+
+/*Timer : for 50ms CAN message*/
+on timer t50
+{
+  output(hpcad350);
+}
+
+/*Timer : for 10ms CAN message.*/
+on timer t10
+{
+  exec();
+  output(ieb1fd10);
+  output(hpcc410);
+  output(vcu2fd100);
+  output(vcu1fd20);
+  output(hpcc1100);
+  output(vcu11fd10);
+}
+
+/* Function run on "_default" system variable change*/
+on sysvar Diagnotic_Sys::_default
+{
+  diagRequest Front_Zonal.DefaultSession_Start default_session;
+  @Diagnotic_Sys::_default = 0;
+  diagSendRequest(default_session);
+}
+
+/*Function run on "_extended" system variable change*/
+on sysvar Diagnotic_Sys::_extended
+{
+  diagRequest Front_Zonal.ExtendedDiagnosticSession_Start Extended_session;
+  @Diagnotic_Sys::_extended = 0;
+  diagSendRequest(Extended_session);
+}
+
+/*Function run on "_Seed Request" system variable change*/
+on sysvar Diagnotic_Sys::_seedReq
+{
+  diagRequest Front_Zonal.SeedLevel1_Request L1_seedReq;
+  @Diagnotic_Sys::_seedReq = 0;
+  diagSendRequest(L1_seedReq);
+}
+
+/*Function run on "_Seed Response" system variable change*/
+on sysvar Diagnotic_Sys::_seedRes
+{
+  diagRequest Front_Zonal.KeyLevel1_Send L1_seedRes;
+  @Diagnotic_Sys::_seedRes = 0;
+  diagSendRequest(L1_seedRes);
+}
+
+/*Function run on "_Feature Bit Read Write" system variable change for Panel*/
+on sysvar Diagnotic_Sys::_feature_RW
+{
+  @Diagnotic_Sys::_feature_RW = 0;
+  openPanel("Feature_PanelRW");
+}
+
+/*Function run on "_feature_ Read" system variable change*/
+on sysvar Diagnotic_Sys::_feature_R
+{
+  diagRequest Front_Zonal.RW_176_Feature_Coding_Read FeatureRReq;
+  @Diagnotic_Sys::_feature_R = 0;
+  diagSendRequest(FeatureRReq); 
+}
+
+/*Function run on "_feature_ Write" system variable change*/
+on sysvar Diagnotic_Sys::_feature_W
+{
+  diagRequest Front_Zonal.RW_176_Feature_Coding_Write FeatureWReq;
+  @Diagnotic_Sys::_feature_W = 0;
+  FeatureCodeWrite();
+  diagSetParameter(FeatureWReq,"Byte1", FeatureByte[0]);
+  diagSetParameter(FeatureWReq,"Byte2", FeatureByte[1]);
+  diagSetParameter(FeatureWReq,"Byte3", FeatureByte[2]);
+  diagSetParameter(FeatureWReq,"Byte4", FeatureByte[3]);
+  diagSetParameter(FeatureWReq,"Byte5", FeatureByte[4]);
+  diagSetParameter(FeatureWReq,"Byte6", FeatureByte[5]);
+  diagSetParameter(FeatureWReq,"Byte7", FeatureByte[6]);
+  diagSetParameter(FeatureWReq,"Byte8", FeatureByte[7]);
+  diagSetParameter(FeatureWReq,"Byte9", FeatureByte[8]);
+  diagSetParameter(FeatureWReq,"Byte10", FeatureByte[9]);
+  diagSetParameter(FeatureWReq,"Byte11", FeatureByte[10]);
+  diagSetParameter(FeatureWReq,"Byte12", FeatureByte[11]);
+  diagSetParameter(FeatureWReq,"Byte13", FeatureByte[12]);
+  diagSetParameter(FeatureWReq,"Byte14", FeatureByte[13]);
+  diagSetParameter(FeatureWReq,"Byte15", FeatureByte[14]);
+  diagSetParameter(FeatureWReq,"Byte16", FeatureByte[15]);
+  diagSetParameter(FeatureWReq,"Byte17", FeatureByte[16]);
+  diagSetParameter(FeatureWReq,"Byte18", FeatureByte[17]);
+  diagSetParameter(FeatureWReq,"Byte19", FeatureByte[18]);
+  diagSetParameter(FeatureWReq,"Byte20", FeatureByte[19]);
+  diagSetParameter(FeatureWReq,"Byte21", FeatureByte[20]);
+  diagSendRequest(FeatureWReq);
+}
+
+/*Function run on when we get diagnostic response of Feature code read DID*/
+on diagResponse Front_Zonal.RW_176_Feature_Coding_Read
+{
+  byte FeatureByte[45];
+  long size;
+  diagResponse * resp; // declare response with no concrete interpretation
+  size=this.GetPrimitiveSize(); // get length of response
+  this.GetPrimitiveData(FeatureByte, elcount(FeatureByte)); // copy actual response from "on diagResponse *" into data array 
+  FeatureCodeRead();
+}
+
+/*Function run to update Feature Code array as per system variable for DID write */
+void FeatureCodeWrite()
+{
+  FeatureByte[3] = 0;
+  FeatureByte[3] |= @FeatureBit_1::_cdl<<0;
+  FeatureByte[3] |= @FeatureBit_1::_AutoLock<<1;
+  FeatureByte[3] |= @FeatureBit_1::_Antilockout<<2;
+  FeatureByte[3] |= @FeatureBit_1::_Tailgate_release<<3;
+  FeatureByte[3] |= @FeatureBit_1::_Charger_Port<<4;
+  FeatureByte[3] |= @FeatureBit_1::_Charger_Port_VC<<5;
+  FeatureByte[3] |= @FeatureBit_1::_Charger_Port_MCM<<6;
+  FeatureByte[3] |= @FeatureBit_1::_Charge_port_PKE<<7;
+  FeatureByte[1] = 0;
+  FeatureByte[1] |= @FeatureBit_2::_CDL_switch_confg<<0;
+  FeatureByte[1] |= @FeatureBit_2::_turn_lamp_enable<<2;
+  FeatureByte[1] |= @FeatureBit_2::_auto_turn_lamp<<3;
+  FeatureByte[1] |= @FeatureBit_2::_one_tuuch_lane_change_indicator_enable<<4;
+  FeatureByte[1] |= @FeatureBit_2::_Lane_change_assist_enable<<5;
+  FeatureByte[1] |= @FeatureBit_2::_front_turn_lamps_CAN_FD_enable<<6;
+  FeatureByte[1] |= @FeatureBit_2::_autohazard_due_to_rear_collision<<7;
+  FeatureByte[2] = 0;
+  FeatureByte[2] |= @FeatureBit_3::_auto_hazard_on_door_open<<0;
+  FeatureByte[2] |= @FeatureBit_3::_auto_hazard_due_to_crash<<2;
+  FeatureByte[2] |= @FeatureBit_3::_auto_hazard_on_panic_braking<<3;
+  FeatureByte[2] |= @FeatureBit_3::_vehicle_brakedown_warning_enable_disable<<4;
+  FeatureByte[2] |= @FeatureBit_3::_rish_mitigation_support<<5;
+  FeatureByte[2] |= @FeatureBit_3::_front_turn_lamps_open_load_sensing<<6;
+  FeatureByte[2] |= @FeatureBit_3::_rear_turn_lamps_open_load_sensing<<7;
+  ///*
+  FeatureByte[3] = 0;
+  FeatureByte[3] |= @FeatureBit_4::_foldunfold_control<<0;
+  FeatureByte[3] |= @FeatureBit_4::_ORVM_Adjust_feedback_led<<1;
+  FeatureByte[3] |= @FeatureBit_4::_ORVM_memory_enable_disable<<2;
+  FeatureByte[3] |= @FeatureBit_4::_ORVM_Adjust_feedback_led<<3;
+  FeatureByte[3] |= @FeatureBit_4::_automirrordipOnReverse_enable_disable<<4;
+  FeatureByte[3] |= @FeatureBit_4::_ORVM_switch_config<<5;
+  FeatureByte[3] |= @FeatureBit_4::_Auto_dimming_IRVM<<6;
+  
+  FeatureByte[4] = 0;
+  FeatureByte[4] |= @FeatureBit_5::_Front_Wiper_INT_Enable_Disable<<0;
+  FeatureByte[4] |= @FeatureBit_5::_Front_Wiper_Low_Enable_Disable<<1;
+  FeatureByte[4] |= @FeatureBit_5::_Front_Wiper_High_Enable_Disable<<2;
+  FeatureByte[4] |= @FeatureBit_5::_Front_washer_Enable_Disable<<3;
+  FeatureByte[4] |= @FeatureBit_5::_Auto_Wipe_Control_Enable_Disable<<4;
+  FeatureByte[4] |= @FeatureBit_5::_Rear_Wiper_Int_Enable_Disable<<5;
+  FeatureByte[4] |= @FeatureBit_5::_Rear_Wiper_Low_Enable_Disable<<6;
+  FeatureByte[4] |= @FeatureBit_5::_Rear_washer_Enable_Disable<<7; 
+  
+  FeatureByte[5] = 0;
+  FeatureByte[5] |= @FeatureBit_6::_Auto_Washer_Enable_Disable<<0;
+  FeatureByte[5] |= @FeatureBit_6::_Auto_Rear_Wiper_Enable_Disable<<1;
+  FeatureByte[5] |= @FeatureBit_6::_Wiper_sevice_mode_Enable_Disabled_for_both_HW_and_MCM_<<2;
+  //FeatureByte[5] |= @FeatureBit_6::_reserve<<3;
+  FeatureByte[5] |= @FeatureBit_6::_RKE_Function_Enable_Disable<<4;
+  FeatureByte[5] |= @FeatureBit_6::_RKE_Selective_Unlock<<5;
+  FeatureByte[5] |= @FeatureBit_6::_RKE_Lock_with_Driver_Door_Open<<6;
+  FeatureByte[5] |= @FeatureBit_6::_RKE_Tailgate_Release<<7;
+  
+  FeatureByte[6] = 0;
+  FeatureByte[6] |= @FeatureBit_7::_RKE_Panic<<0;
+  FeatureByte[6] |= @FeatureBit_7::_RKE_Search<<1;
+  FeatureByte[6] |= @FeatureBit_7::_Follow_me_Home_Enable_Disable<<2;
+  FeatureByte[5] |= @FeatureBit_7::_Lead_me_to_Vehicle_Enable_Disable<<3;
+  FeatureByte[6] |= @FeatureBit_7::_Auto_Relock_Rearm_Enable_Disable<<4;
+  FeatureByte[6] |= @FeatureBit_7::_SIREN_FEEDBACK_ON_RKE_LOCK__UNLOCK<<5;
+  FeatureByte[6] |= @FeatureBit_7::_Turn_Lamp_Feedback_On_RKE_Lock<<6;
+  FeatureByte[6] |= @FeatureBit_7::_Turn_Lamp_Feedback_On_RKE_Unlock<<7;
+  
+  FeatureByte[7] = 0;
+  FeatureByte[7] |= @FeatureBit_8::_Key_fob_based_remote_cooling_Enable_Disable<<0;
+  FeatureByte[7] |= @FeatureBit_8::_ATWS_Enable_Disable<<1;
+  //FeatureByte[7] |= @FeatureBit_8::_Reserve<<2;
+  //FeatureByte[7] |= @FeatureBit_8::_Reserve<<3;
+  FeatureByte[7] |= @FeatureBit_8::_Head_Lamp_LIN_HW_enable<<4;
+  FeatureByte[7] |= @FeatureBit_8::_Head_Lamp_Low_Beam_Enable_Disable<<5;
+  FeatureByte[7] |= @FeatureBit_8::_Head_Lamp_High_Beam_Enable_Disable<<6;
+  FeatureByte[7] |= @FeatureBit_8::_Head_Lamp_Park_Enable_Disable<<7;
+  
+  FeatureByte[8] = 0;
+  //FeatureByte[8] |= @FeatureBit_9::_Reserve<<0;
+  FeatureByte[8] |= @FeatureBit_9::_High_Beam_Assist_Enable<<1;
+  FeatureByte[8] |= @FeatureBit_9::_HLLD_Enable_Disable<<2;
+  FeatureByte[8] |= @FeatureBit_9::_High_Beam_Booster_Enable_Disable<<3;
+  FeatureByte[8] |= @FeatureBit_9::_Magic_Park_Lamp_Control_Enable_Disable<<4;
+  FeatureByte[8] |= @FeatureBit_9::_DRL_Enable_Disable<<5;
+  FeatureByte[8] |= @FeatureBit_9::_DRL_HW_CAN_FD<<6;
+  FeatureByte[8] |= @FeatureBit_9::_Signature_Lamp_with_DRL<<7;
+  
+  FeatureByte[9] = 0;
+  //FeatureByte[9] |= @FeatureBit_10::_Reserve<<0;
+  FeatureByte[9] |= @FeatureBit_10::_Head_Lamp_Single_Chamber<<1;
+  FeatureByte[9] |= @FeatureBit_10::_Auto_Light_Enable_DISABLE<<2;
+  FeatureByte[9] |= @FeatureBit_10::_RLS_Enable<<3;
+  FeatureByte[9] |= @FeatureBit_10::_Auto_Park_Lamp_Shut_Off_Enable<<4;
+  FeatureByte[9] |= @FeatureBit_10::_Cornering_Lamp_Enable<<5;
+  FeatureByte[9] |= @FeatureBit_10::_Cornering_Lamp_with_Reverse_Gear_Both_Lamps_ON_Enable<<6;
+  FeatureByte[9] |= @FeatureBit_10::_SAS_ABS_based_Cornering_Lamp_Enable_Disable<<7;
+ 
+}
+
+/*Function run to update system variable as per Feature Code array for DID read */
+void FeatureCodeRead()
+{
+    @FeatureBit_1::_cdl = ((FeatureByte[0]& 0x01)>>0);
+    @FeatureBit_1::_AutoLock= ((FeatureByte[0]& 0x02)>>1);
+    @FeatureBit_1::_Antilockout= ((FeatureByte[0]& 0x04)>>2);
+    @FeatureBit_1::_Tailgate_release= ((FeatureByte[0]& 0x08)>>3);
+    @FeatureBit_1::_Charger_Port= ((FeatureByte[0]& 0x10)>>4);
+    @FeatureBit_1::_Charger_Port_VC= ((FeatureByte[0]& 0x20)>>5);
+    @FeatureBit_1::_Charger_Port_MCM = ((FeatureByte[0]& 0x40)>>6);
+    @FeatureBit_1::_Charge_port_PKE = ((FeatureByte[0]& 0x80)>>7);
+} 
+
+//Function for run when CANalyzer start.
+on start
+{
+  setTimerCyclic(t10,10);
+  setTimerCyclic(t100,100);
+  setTimerCyclic(t50,50);
+  //setTimerCyclic(hlcuTimer, 20);
+}
